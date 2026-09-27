@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Klor Example",
+    "slug": "klor-example",
+    "version": "2.4.0",
+    "orientation": "portrait",
+    "scheme": "klorexample",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "dev.klor.example"
+    },
+    "android": {
+      "package": "dev.klor.example"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar"
+    ]
+  }
+}

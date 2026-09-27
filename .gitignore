@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.local
+*.tsbuildinfo
+.next/
+next-env.d.ts
+.expo/
+expo-env.d.ts
+ios/
+android/
