@@ -96,6 +96,13 @@ const pricing = await klor.getFlag('internal_pricing', { margin: 0.3 }, { userId
 > Public keys (`klor_pub_…`) are safe in client code. Private keys (`klor_sec_…`) must never be
 > bundled into an app or sent to a browser; anything shipped in a binary can be extracted.
 
+## Typed flag keys (optional)
+
+Every key is a plain string unless you opt in. Run `npx @klor/cli@beta types` (the CLI is in beta) and it writes a
+declaration file from your project: keys autocomplete, a misspelled key fails the build, and a
+fallback of the wrong type is refused. Delete the file and everything is untyped again. See
+[klor.dev/docs/cli](https://klor.dev/docs/cli).
+
 ## Examples
 
 - [`examples/expo`](https://github.com/abtonc/klor-react/tree/main/examples/expo): Expo Router app with AsyncStorage, foreground refresh, background flush, and an update gate.

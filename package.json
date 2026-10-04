@@ -1,6 +1,6 @@
 {
   "name": "@klor/react",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Remote config, feature flags, and update gating for React and React Native.",
   "license": "MIT",
   "type": "module",
@@ -32,8 +32,9 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p test/types/untyped && tsc -p test/types/strict && tsc -p test/types/loose",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage --coverage.include='src/**' --coverage.reporter=text",
     "prepublishOnly": "rm -rf dist && pnpm build && pnpm test"
   },
   "peerDependencies": {
@@ -46,7 +47,10 @@
   },
   "devDependencies": {
     "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitest/coverage-v8": "^5.0.0",
     "react": "^19.3.0",
+    "react-dom": "19.3.0",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
   },

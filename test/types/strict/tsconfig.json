@@ -1,0 +1,16 @@
+{
+  // Its own program, because module augmentation is global: a registry
+  // declared here would otherwise apply to the package's own typecheck.
+  // Extends the package's tsconfig rather than the monorepo base, so it works
+  // unchanged in the public klor-react repository too.
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@klor/react": ["../../../src/index.ts"],
+      "@klor/react/core": ["../../../src/core/index.ts"],
+      "@klor/react/server": ["../../../src/server.ts"]
+    }
+  },
+  "include": ["*.ts"],
+  "exclude": []
+}

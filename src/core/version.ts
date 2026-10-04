@@ -6,4 +6,4 @@
  * import would make the ESM output depend on the bundler's assertion support.
  * A test keeps it honest against package.json.
  */
-export const SDK_VERSION = '0.3.0'
+export const SDK_VERSION = '0.4.0'

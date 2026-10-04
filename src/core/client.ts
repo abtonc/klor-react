@@ -6,6 +6,9 @@ import type { KlorStorage } from './storage.js'
 import type { TelemetryOptions } from './telemetry.js'
 import type {
   Evaluation,
+  FlagFallback,
+  FlagKey,
+  FlagResult,
   EvaluationReason,
   FlagValue,
   KlorContext,
@@ -327,19 +330,24 @@ export class KlorClient {
     }
   }
 
-  evaluate = <T extends FlagValue>(
-    flagKey: string,
+  // Fallback type first, key type defaulted: see the note above `useFlag`.
+  evaluate = <T extends FlagFallback<K>, K extends FlagKey = FlagKey>(
+    flagKey: K,
     fallback: T,
     context: KlorContext,
-  ): Evaluation<T> => {
+  ): Evaluation<FlagResult<K, T>> => {
     const override = this.#state.overrides[flagKey]
     // A mismatched override is ignored rather than served: it would otherwise
     // reproduce, on one developer's machine only, the exact silent-fallback
     // failure the type check exists to prevent.
     if (override !== undefined && typeof override === typeof fallback) {
-      return { value: override as T, reason: 'override' }
+      return { value: override as FlagResult<K, T>, reason: 'override' }
     }
-    return evaluateFromSnapshot(this.#state.snapshot, flagKey, fallback, context)
+    // The evaluator returns the fallback's type; `FlagResult` only narrows or
+    // widens that at the type level, so the value itself is unchanged.
+    return evaluateFromSnapshot(this.#state.snapshot, flagKey, fallback, context) as Evaluation<
+      FlagResult<K, T>
+    >
   }
 
   /** Forces a value on this device until it is cleared. */

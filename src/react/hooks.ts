@@ -2,13 +2,26 @@ import { useEffect, useSyncExternalStore } from 'react'
 import { useKlorContext } from './context.js'
 import { evaluateVersionGate } from '../core/evaluate.js'
 import type { KlorState } from '../core/client.js'
-import type { Evaluation, FlagValue, VersionGateResult } from '../core/types.js'
+import type {
+  Evaluation,
+  FlagFallback,
+  FlagKey,
+  FlagResult,
+  VersionGateResult,
+} from '../core/types.js'
 
 /** Subscribes to the client's store. Exported for the devtools panel. */
 export function useKlorState(): KlorState {
   const { client } = useKlorContext()
   return useSyncExternalStore(client.subscribe, client.getState, client.getState)
 }
+
+/*
+ * Type parameter order on every read below is load-bearing: the fallback's type
+ * comes first and the key's has a default, so a caller who writes one type
+ * argument, `useFlag<Theme>(...)`, names the fallback as they did before typed
+ * keys existed. With the key first, every such call stops compiling.
+ */
 
 /**
  * Reads a flag. Synchronous, never suspends, and never throws, before the
@@ -18,13 +31,21 @@ export function useKlorState(): KlorState {
  * ```ts
  * const showNewCheckout = useFlag('checkout_v2', false)
  * ```
+ *
+ * Keys are any string unless you opt into typed keys (see `KlorFlags`).
  */
-export function useFlag<T extends FlagValue>(flagKey: string, fallback: T): T {
+export function useFlag<T extends FlagFallback<K>, K extends FlagKey = FlagKey>(
+  flagKey: K,
+  fallback: T,
+): FlagResult<K, T> {
   return useFlagDetail(flagKey, fallback).value
 }
 
 /** `useFlag` plus why that value was chosen, useful in dev tools and logging. */
-export function useFlagDetail<T extends FlagValue>(flagKey: string, fallback: T): Evaluation<T> {
+export function useFlagDetail<T extends FlagFallback<K>, K extends FlagKey = FlagKey>(
+  flagKey: K,
+  fallback: T,
+): Evaluation<FlagResult<K, T>> {
   const { client, context } = useKlorContext()
   const state = useKlorState()
   // Through the client rather than the pure evaluator, so a local override is

@@ -162,3 +162,82 @@ export interface VersionGateResult {
   storeUrl?: string
   message?: string
 }
+
+/* -------------------------------------------------------------------------- */
+/* Typed flag keys, opt-in                                                    */
+/* -------------------------------------------------------------------------- */
+
+declare global {
+  /**
+   * Your project's flags, key to value type. Empty unless you fill it in, and
+   * while it is empty every key is a plain `string` and nothing below changes
+   * how the SDK types a read.
+   *
+   * `npx @klor/cli types` writes a declaration file that fills it in from your
+   * project, after which keys autocomplete, a mistyped key fails the build, and
+   * a fallback of the wrong type is refused. Writing it by hand works the same:
+   *
+   * ```ts
+   * declare global {
+   *   interface KlorFlags {
+   *     checkout_v2: boolean
+   *   }
+   * }
+   * export {}
+   * ```
+   *
+   * Global rather than an augmentation of this module, and that is load-bearing.
+   * TypeScript's incremental builds (`tsc -b`, `next build`, any `incremental`
+   * tsconfig) re-check a file only when something it imports changes, unless
+   * the changed file touches the global scope. Nothing imports the generated
+   * file, so as a module augmentation a regenerated list went unnoticed by a
+   * warm build: a flag removed in the dashboard still compiled until the cache
+   * was cleared. A global declaration makes every file be re-checked.
+   */
+  interface KlorFlags {}
+
+  /**
+   * Options for typed keys. Set `strict: false` to keep autocomplete and typed
+   * values for the keys in `KlorFlags` while still accepting any other string,
+   * for a codebase that reads flags faster than it regenerates types.
+   */
+  interface KlorTypeOptions {}
+}
+
+/** A key listed in `KlorFlags`. Named for the error message it appears in. */
+type KnownFlagKey = keyof KlorFlags & string
+
+/** What a flag read accepts as a key: any string, or only registered keys. */
+export type FlagKey = [KnownFlagKey] extends [never]
+  ? string
+  : KlorTypeOptions extends { strict: false }
+    ? KnownFlagKey | (string & {})
+    : KnownFlagKey
+
+/** What a flag read accepts as a fallback for `K`. */
+export type FlagFallback<K extends string> = K extends KnownFlagKey
+  ? Extract<KlorFlags[K], FlagValue>
+  : FlagValue
+
+/**
+ * The type a flag read returns.
+ *
+ * A registered scalar flag returns its registered type. A JSON flag returns the
+ * fallback's type, since the shape of a JSON value is something only the app
+ * knows. An unregistered key returns exactly the fallback's type, as it did
+ * before typed keys existed, so a generic wrapper such as
+ * `function read<T extends FlagValue>(key: string, fallback: T): T` keeps
+ * compiling.
+ *
+ * When `K` is the whole of `FlagKey` it was not inferred from a key but left at
+ * its default, which happens only when the caller wrote the fallback's type
+ * themselves, as in `useFlag<Theme>('theme', fallback)`. That caller asked for
+ * `T`, and gets it: anything else would be a union of every registered type.
+ */
+export type FlagResult<K extends string, T> = [FlagKey] extends [K]
+  ? T
+  : K extends KnownFlagKey
+    ? KlorFlags[K] extends boolean | string | number
+      ? KlorFlags[K]
+      : T
+    : T

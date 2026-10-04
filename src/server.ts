@@ -8,7 +8,16 @@
 
 import { evaluateFromSnapshot, evaluateVersionGate } from './core/evaluate.js'
 import { KlorClient } from './core/client.js'
-import type { Evaluation, FlagValue, KlorContext, Snapshot, VersionGateResult } from './core/types.js'
+import type {
+  Evaluation,
+  FlagFallback,
+  FlagKey,
+  FlagResult,
+  FlagValue,
+  KlorContext,
+  Snapshot,
+  VersionGateResult,
+} from './core/types.js'
 
 export interface KlorServerClientOptions {
   /** A private key. Public keys work too, but won't see sensitive flags. */
@@ -63,21 +72,26 @@ export class KlorServerClient {
     }
   }
 
-  async getFlag<T extends FlagValue>(
-    flagKey: string,
+  async getFlag<T extends FlagFallback<K>, K extends FlagKey = FlagKey>(
+    flagKey: K,
     fallback: T,
     context: KlorContext = {},
-  ): Promise<T> {
+  ): Promise<FlagResult<K, T>> {
     return (await this.getFlagDetail(flagKey, fallback, context)).value
   }
 
-  async getFlagDetail<T extends FlagValue>(
-    flagKey: string,
+  async getFlagDetail<T extends FlagFallback<K>, K extends FlagKey = FlagKey>(
+    flagKey: K,
     fallback: T,
     context: KlorContext = {},
-  ): Promise<Evaluation<T>> {
+  ): Promise<Evaluation<FlagResult<K, T>>> {
     await this.ready()
-    return evaluateFromSnapshot(this.#client.getState().snapshot, flagKey, fallback, context)
+    return evaluateFromSnapshot(
+      this.#client.getState().snapshot,
+      flagKey,
+      fallback,
+      context,
+    ) as Evaluation<FlagResult<K, T>>
   }
 
   /** Every flag evaluated for one context, handy for hydrating a client. */
@@ -123,5 +137,11 @@ export function createKlorServerClient(options: KlorServerClientOptions): KlorSe
   return new KlorServerClient(options)
 }
 
-export type { Evaluation, FlagValue, KlorContext, Snapshot, VersionGateResult } from './core/types.js'
+export type {
+  Evaluation,
+  FlagValue,
+  KlorContext,
+  Snapshot,
+  VersionGateResult,
+} from './core/types.js'
 export { KlorHttpError } from './core/transport.js'
